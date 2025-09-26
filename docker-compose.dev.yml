@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    networks:
+      - compliance-network
+    command: npm run dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./compliance_officer.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+    volumes:
+      - ./backend:/app
+    networks:
+      - compliance-network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  compliance-network:
+    driver: bridge
